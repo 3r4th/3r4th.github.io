@@ -1,0 +1,222 @@
+<!DOCTYPE HTML>
+<html>
+<!-- Infosec by 3r4th -->
+
+<head>
+    <title>Static Analysis</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <link rel="stylesheet" href="assets/css/main.css" />
+</head>
+
+<body class="is-preload">
+
+    <!-- Wrapper -->
+    <div id="wrapper">
+
+        <!-- Main -->
+        <div id="main">
+            <div class="inner">
+
+                <!-- Header -->
+                <header id="header">
+                    <a href="index.html" class="logo"><strong>InfoSec</strong> by 3r4th</a>
+                    <ul class="icons">
+                        <li><a href="https://github.com/3r4th" target="_blank" class="icon brands fa-github"><span
+                                    class="label">Github</span></a></li>
+                    </ul>
+                </header>
+
+                <!-- Content -->
+                <section>
+                    <header class="main">
+                        <h1>Find out how malware steals your passwords</h1>
+                    </header>
+
+                    <span class="image main"><img src="images/pic02.jpg" alt="" /></span>
+
+                    <p>Today we’re going to cover one aspect of static analysis by looking at an unpacked <b> password
+                            stealer</b> that may run silently in the background and may not provide any indication of
+                        infection
+                        to you as a user.</p>
+                    <p>If you want to know why we analyze malware and the different approaches that exist, check my
+                        previous post : <a href="malware_overview.html" target="_blank">Can we know what malware is
+                            hiding ?</a></p>
+                    <p>To better understand, I recommend you do it at the same time but you must already have an
+                        isolated and virtual environment so as not to infect your real machine 😉</p>
+                    <p>Personally, I use FLARE-VM which comes with all the necessary tools for malware analysis, but you
+                        can use a simple windows virtual machine instead😊. The link to download the malware ☠ is at the
+                        bottom. Now let’s jump in ☕️ :</p>
+                    <h2>1. Identify the file type, target OS and architecture :</h2>
+                    <p>First of all we have to identify the file type because it helps us to know the target OS (Windows
+                        or Linux …) and the corresponding architecture (32-bit or 64-bit).</p>
+                    <p>On Windows, an executable is called a <b>PE</b> which stands for <b>Portable Executable</b> and
+                        it can
+                        be of
+                        different formats exe, dll, sys, etc …</p>
+                    <p>In order to do this we’re going to open our malware with 3 different tools : <b>PEstudio</b>,
+                        <b>CFF explorer</b> and <b>Exeinfo PE</b></p>
+                    <div class="box alt">
+                        <div class="row gtr-50 gtr-uniform">
+                            <div class="col-4"><span class="image fit"><img src="images/1.png" alt="" /></span></div>
+                            <div class="col-4"><span class="image fit"><img src="images/2.png" alt="" /></span></div>
+                            <div class="col-4"><span class="image fit"><img src="images/3.png" alt="" /></span></div>
+                        </div>
+                    </div>
+                    <p>Good, now we know that is a Win32 DLL (dynamic-link-library) and its an executable because of the
+                        MIME type (first-bytes = MZ) and it’s targeting a 32-bit MS Windows (GUI). </p>
+                    <h2>2. Generate a hash of the malware :</h2>
+                    <p>Next step is to generate a hash of our malware to see if anyone else has analyzed it before, for
+                        this either we use the above tools or we use an other one called <b>HashCalc</b> : </p>
+                    <p><span class="image fit"><img src="images/4.png" alt="" /></span>As we can see, the tool
+                        gives us different hashes (fingerprints) using different algorithms (MD5, SHA1 …), so we just
+                        need to search on websites like <b>VirusTotal</b> or <b>HybridAnalysis</b> for previous
+                        detections or to check if it has been analyzed before by an other one 😉</p>
+                    <h2>3. Get all strings :</h2>
+                    <p>Extracting readable characters gives us an idea of what the malware can do. Basically we look for
+                        file names, domain names the malware connects to (URLs), IP addresses, Registry keys, etc …</p>
+                    <p>Note that attackers 😈 may also include fake or garbage characters to disrupt our analysis. Again
+                        with <b>PEstudio</b> we can extract a lot of information :</p>
+                    <p><span class="image fit"><img src="images/5.png" alt="" /></span>As we can see, we have a few URLs
+                        and a POST request, so probably these domains belong to a C&C server and the malware
+                        communicates with it by sending back credentials and gathered information 😲</p>
+                    <p>Now, if we navigate through the blacklist filter, we’ll see that it calls Windows-specific
+                        functions as shown below : </p>
+                    <p><span class="image fit"><img src="images/6.png" alt="" /></span>We can therefore assume that it
+                        uses system functions to enumerate usernames, passwords, services, etc …, and send them back to
+                        the attacker 🤔. You get the idea 💡, now look at the rest in detail to fully understand
+                        what it does. </p>
+                    <h2>4. Analyze the PE header :</h2>
+                    <p> Deep analysis of the PE header reveals a lot of information about the malware’s capacity.
+                        Basically, we are looking at what subsystem is used, whether the executable is packed or not,
+                        and what libraries are required for its functionality. </p>
+                    <p>Before we start, we must first understand the structure of a PE header 🤓. The PE format is a
+                        data structure that encapsulates the information necessary for the Windows OS loader to manage
+                        the wrapped executable code, it contains :
+                        <ul>
+                            <li><b>DOS header</b> : defines the file as an executable binary.</li>
+                            <li><b>DOS stub</b> : message to the user and exit if the binary file is run under MS-DOS.
+                            </li>
+                            <li><b>File header</b> : defines the signature, compiler-stamp, etc …</li>
+                            <li><b>Optional header</b> : information about subsystem, entry-point, etc …</li>
+                            <li><b>Sections table</b> : tells how to load the executable in memory.</li>
+                        </ul>
+                        Then we have sections : <b>.text .rdata .data .reloc .rsrc</b> … We’re going to mainly use
+                        <b>PEstudio</b> &
+                        <b>CFF explorer</b> but the same results can be achieved using other tools 😇
+                    </p>
+                    <h3>DOS header :</h3>
+                    <p>With <b>CFF explorer</b>, we can see immediately the value of the <b>DOS header</b> :</p>
+                    <p><span class="image fit"><img src="images/7.png" alt="" /></span>The first two bytes in
+                        hexadecimal contain <b>5A4D</b> (MZ in little endian) which identifies the file as an executable
+                        👌</p>
+                    <h3>DOS stub :</h3>
+                    <p><span class="image fit"><img src="images/8.png" alt="" /></span>With <b>PEstudio</b> we see the
+                        stub
+                        message which tells us that this program cannot be run in DOS mode. Note that PE files keep this
+                        for backward compatibility with DOS. When run in DOS, a so-called DOS stub is executed which
+                        prints this message and exits.</p>
+                    <h3>File header :</h3>
+                    <p><span class="image fit"><img src="images/9.png" alt="" /></span>Awesome, the signature defines
+                        the file as a PE 👍, the malware was compiled on Mon Oct 17 04:48:13 2016 😕 and other
+                        information that we have already found before 🙂</p>
+                    <h3>Optional header : </h3>
+                    <p><span class="image fit"><img src="images/10.png" alt="" /></span>Great, we got a lot of
+                        information here like where the first instruction of the malware is executed (entry-point),
+                        the OS version (4.0), the subsystem used (Graphical User Interface), etc … </p>
+                    <h3>Sections :</h3>
+                    <p><span class="image fit"><img src="images/11.png" alt="" /></span>In our case we have 4 sections :
+                        <ul>
+                            <li><b>.text</b> : contains the executable code.</li>
+                            <li><b>.rdata</b> &amp; <b>.data</b> : stores data and addresses of particular library
+                                functions imported or exported from DLLs.
+                            </li>
+                            <li><b>.reloc</b> : within this section is a base relocation table needed to fix up virtual
+                                addresses.</li>
+                        </ul>
+                    </p>
+                    <h2>5. Libraries and imports :</h2>
+                    <p><span class="image fit"><img src="images/12.png" alt="" /></span>As we can see it uses functions
+                        from <b>wsock32.dll</b> and <b>wininet.dll</b> to establish Internet connections with the C&C
+                        server through
+                        POST requests. What we assumed before is true 😮 and also in order to interact with registries
+                        it uses functions from <b>advapi32.dll</b>, possibly for persistence 😧</p>
+                    <p>Now we scroll through the <b>kernel32.dll</b> library which is used to interact with the
+                        operating system :</p>
+                    <p><span class="image fit"><img src="images/13.png" alt="" /></span>And we see that the malware has
+                        the ability to create, read, write, delete files and interact with processes which is expected
+                        from a credentials stealer 😎. Note that it uses the <b>LoadLibrary</b> function to dynamically
+                        load
+                        other libraries, so in other words what we got may not be all the libraries needed for its
+                        functionality 😧</p>
+                    <p>To go further in details, we must either reverse it using <b>Ghidra</b> for example, or analyze
+                        it
+                        dynamically with <b>Ollydbg</b> or <b>IDA Pro</b>.</p>
+                    <p>Well there you go, I hope you liked it and don’t forget to leave a comment 😊. Well there you go,
+                        I hope you liked it and don’t forget to leave a comment 😊</p>
+                    <p>To be continued …</p>
+
+                    <h2>References & Links :</h2>
+                    <ul>
+                        <li>The malware : <b>Generic.PWS2.rar</b></li>
+                        <li>The password : <b>infected</b></li>
+                        <li>Download it from my GitHub repository: <a href="https://github.com/3r4th/malicious-files"
+                                target="_blank">link</a></li>
+                    </ul>
+                    <p><a href="https://docs.microsoft.com/en-us/windows/win32/debug/pe-format" target="_blank">Click
+                            here for more information about the PE format</a></p>
+                </section>
+
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div id="sidebar">
+            <div class="inner">
+
+                <!-- Menu -->
+                <nav id="menu">
+                    <header class="major">
+                        <h2>Menu</h2>
+                    </header>
+                    <ul>
+                        <li><a href="index.html">all posts</a></li>
+                        <li>
+                            <span class="opener">by category</span>
+                            <ul>
+                                <li><a href="malware_analysis.html">malware analysis</a></li>
+                                <li><a href="red_team.html">red team</a></li>
+                            </ul>
+                        </li>
+                        <!-- <li><a href="elements.html">elements</a></li> -->
+                    </ul>
+                </nav>
+
+                <!-- Section -->
+                <section>
+                    <header class="major">
+                        <h2>Get in touch</h2>
+                    </header>
+                    <ul class="contact">
+                        <li class="icon solid fa-envelope">mustapha.djebablia@gmail.com</li>
+                        <li class="icon brands fa-linkedin"><a
+                                href="https://www.linkedin.com/in/mustapha-djebablia-a8705a195" target="_blank">Mustapha
+                                Djebablia</a></li>
+                        <li class="icon solid fa-phone">(+33) 616741856</li>
+                    </ul>
+                </section>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/js/browser.min.js"></script>
+    <script src="assets/js/breakpoints.min.js"></script>
+    <script src="assets/js/util.js"></script>
+    <script src="assets/js/main.js"></script>
+
+</body>
+
+</html>

