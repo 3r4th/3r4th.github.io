@@ -35,7 +35,75 @@
 
                     <span class="image main"><img src="images/pic05.jpg" alt="" /></span>
 
-                    Will be published soon ...
+                    <p>In malware creation process, <b>obfuscation</b> of this one is essential in order to <b>avoid
+                            detection</b>
+                        and make <b>reverse engineering difficult</b>. Packing is a type of obfuscation
+                        techniques.
+                    </p>
+                    <p>There are multiple packing tools available and they are very easy to use, here some popular ones
+                        : <b>UPX</b>, <b>Themida</b>, <b>VMProtect</b>, <b>ExeStealth</b>, <b>Aegis Crypter</b>. But
+                        many malware authors use custom-made tools 😈 and that is why I made this post to give you a
+                        good idea of how it works 😉
+                    </p>
+                    <p>Well, for those who do not know what it is, here is a very quick definition :
+                        <b>
+                            <blockquote>packing is the
+                                transformation of un executable to another one with a specific file system footprint.
+                            </blockquote>
+                        </b>
+                    </p>
+                    <p> Think of it as the process of encrypting the first executable (malware created) and appending a
+                        piece of code called <b>"stub"</b> to it in order to decrypt it later to be executed on the
+                        target
+                        system. As for the stub, it is just a piece of code that contains the decryption agent used to
+                        decrypt the packed malware.
+
+                    </p>
+                    <p>A packer can be useful <b>against static analysis</b> because it changes the signature of the
+                        file which
+                        circumvent such a thing. To make a packer, we have two main chalenges :
+
+                        <ol>
+                            <li>First of all, we have to create the stub which requires a good knowledge of the target
+                                architecture, so if, for example, we target a Windows-based system, we need to know the
+                                different system calls necessary to unpack, load and execute our malware thereafter 🤔
+                            </li>
+                            <li>Secondly, we need to inject the stub stealthily, for example as an additional section at
+                                the end of the first executable as you can see below. Check <a href="pswd_stealer.html"
+                                    target="_blank">this post</a> for more
+                                information
+                                about the PE format.
+                                <span class="image fit"><img src="images/18.png" alt="" /></span></li>
+                        </ol>
+                    </p>
+                    <p>
+                        ⚠️ But wait a second, it is <b>suspicious</b> to do it <b>this way</b> because we have to point
+                        our
+                        <b>"entrypoint"</b> towards the stub which is so weird. Effectively, usually entrypoint
+                        points to
+                        the code section (the first section of an executable) and not to another section. Another
+                        technique is to create a new executable from the first one but by putting our stub in the code
+                        section and this is no longer suspect, because the code section will contain the encrypted data
+                        (our evil code) and the stub 😮
+                        <span class="image fit"><img src="images/19.png" alt="" /></span>
+                    </p>
+                    <p>Sorry but we will have another problem because the <b>"entropy"</b> of this new section will be
+                        high and
+                        does not look like a normal one which leads to detection. Do not worry, here is a solution 💡 :
+                        <ol>
+                            <li>Add the encrypted data to the resource section of a legitimate process.
+                            </li>
+                            <li>Then overwrite a portion of code of this new one with the stub and your packed malware
+                                will look like this :
+                                <span class="image fit"><img src="images/20.png" alt="" /></span></li>
+                        </ol>
+                    </p>
+                    <p>Here are some techniques for getting around antivirus and what I've mentioned here should get you
+                        started. I hope you liked it and take care 😊</p>
+                    <h2>References :</h2>
+                    <p><a href="https://www.blackhat.com/docs/us-14/materials/us-14-Mesbahi-One-Packer-To-Rule-Them-All-WP.pdf"
+                            target="_blank">Empirical identification, comparison and circumvention of current
+                            Antivirus detection techniques</a> from blackhat materials.</p>
 
                 </section>
 
