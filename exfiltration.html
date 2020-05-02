@@ -33,7 +33,86 @@
                         <h1>Data exfiltration techniques</h1>
                     </header>
                     <span class="image main"><img src="images/21.png" alt="" /></span>
-                    <p>Will be published soon ...</p>
+                    <p>Nowadays, data is one of the most important assets and its disclosure costs time and money. This
+                        is why most of companies rely on <b>DLP "Data Loss Prevention"</b> solutions to guarantee that
+                        sensitive data is not disclosed, lost or accessible by unauthorized users.
+                        For small businesses they use similar mechanisms, however less effective. For example, they
+                        block
+                        endpoints by URI/IP, use firewalls to block connections by port/protocols, detect anomalies in
+                        payload size and frequency, etc ...
+                    </p>
+                    <p>In this post, we will look at different ways to exfiltrate data during a red team engagement or a
+                        real cyber attack, but keep in mind that you should use <b>ecryption</b> and <b>normal payload
+                            sizes</b> (size
+                        based on the channel used), otherwise your traffic will be detected.
+                        <dl>
+                            <b>
+                                <dt>1. Standard protocols :</dt>
+                            </b>
+                            <dd>
+                                <p>Protocols used for day to day business is a great way to mask your traffic. Here are
+                                    some examples :
+                                    <ul>
+
+
+                                        <li>
+                                            <b>File Transfer Protocol (FTP) :</b> Simple to use and data can be exported
+                                            even in structured format via the <b>command prompt</b> or a <b>web-based
+                                                FTP client</b>.
+                                        </li>
+                                        <li><b>Hypertext Transfer Protocol (HTTP) :</b> Data can be exported via <b>HTTP
+                                                requests</b> (GET, POST, etc ...) or simply by uploading files to the
+                                            C2.
+                                        </li>
+                                        <li><b> Internet Control Message Protocol (ICMP) :</b> We can exfiltrate data in
+                                            ping packet padding. So we take a file and split it into 16 bytes chunks and
+                                            send it out via the padding within ping to a listening server. SANS has
+                                            written a script called <b>"pingsend"</b> for this purpose.
+                                            In order to capture the ICMP requests, use <b>"tcpdump"</b> and then
+                                            <b>"tshark"</b> or
+                                            <b>"wireshark"</b> to view the file within the received packets.
+                                        </li>
+                                        <li>
+                                            <b>Domain Name System (DNS) :</b> DNS tunneling is another way to exfiltrate
+                                            sensitive information by hiding it in DNS queries. Tools like
+                                            <b>"dnscat2"</b> or
+                                            <b>"dnsexfiltrator"</b> will do the trick.
+                                        </li>
+                                    </ul>
+                                    The list is far from over, there are even more standard protocols
+
+                                    and network
+                                    utilities to use like <b>TELNET</b>, <b>SSH</b>, <b>Netcat</b>, <b>SMB</b> etc ...
+                                    to exfiltrate data.
+                                </p>
+                            </dd>
+                            <b>
+                                <dt>2. Hosting services :</dt>
+                            </b>
+                            <dd>
+                                <p><b>File hosting services</b> like "dropbox", <b>anonymous paste sites</b> like
+                                    "Pastebin", <b>Picture
+                                        sharing platforms</b> like "Flickr", <b>IM</b> (Instant Messaging) & <b>IRC
+                                        channels</b> are often
+                                    accessible from the internal network. Even if the most well-known platforms are
+                                    blocked by the Web proxy, be sure that there are others that bypass it.</p>
+                            </dd>
+                            <b>
+                                <dt>3. Mailbox :</dt>
+                            </b>
+                            <dd>
+                                <p>Of course, it is the easiest way to exfiltrate data by sending e-mails. Note that we
+                                    can also perform this on behalf of another employee using the command prompt, we
+                                    will talk about it in another post.</p>
+                            </dd>
+                        </dl>
+                        <b>Removable media</b>, <b>physical documents</b>, <b>printers</b>, <b>VoIP</b>, etc ... and as
+                        I
+                        said above "the list is far
+                        from over" requires no level of expertise. So just look at normal traffic of the target company,
+                        tools, softwares installed and use that to get the data out.
+                    </p>
+                    <p>I hope you have learned at least one new technique. Take care 😊</p>
                 </section>
 
             </div>
